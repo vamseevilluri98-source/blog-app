@@ -1,4 +1,5 @@
 const Blog = require("../models/blog")
+const userViewCount = require("../models/userViewCount")
 module.exports = {
     async saveBlog(req,res){
         try{
@@ -106,4 +107,64 @@ module.exports = {
 
         }
     },
+    async getBlog(req, res) {
+        try {
+            if (!req.params) {
+                return res.status(422).json({ success: false, message: "Invalid request!" })
+            }
+            if (!req.params.id) {
+                return res.status(422).json({ success: false, message: "Invalid user!" })
+            }
+            let data = await Blog.findOne(
+                { _id: req.params.id }
+            );
+            return res.status(200).json({ success: true, message: "Blog details!", data: data })
+
+
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: error.message
+            });
+
+
+        }
+    },
+    async saveViewCount(req, res) {
+        try {
+            if (!req.params.user_id) {
+                return res.status(422).json({
+                    success: false,
+                    message: "Invalid user!"
+                });
+            }
+            console.log(req.params.user_id)
+            const count = await userViewCount.findOneAndUpdate(
+                { user_id: req.params.user_id },
+                {
+                    $inc: { count: 1 },
+                    $setOnInsert: {
+                        user_id: req.params.user_id
+                    }
+                },
+                {
+                    upsert: true,
+                    returnDocument: "after"
+                }
+            );
+            return res.status(200).json({
+                success: true,
+                message: "View count saved successfully!",
+                count
+            });
+
+
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: error.message
+            });
+        }
+    }
+
 }
